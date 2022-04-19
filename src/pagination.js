@@ -22,10 +22,28 @@ module.exports = function (list) {
       currentPage = Math.ceil(index / page),
       innerWindow = options.innerWindow || 2,
       left = options.left || options.outerWindow || 0,
-      right = options.right || options.outerWindow || 0
+      right = options.right || options.outerWindow || 0,
+      prev = options.prev || false,
+      next = options.next || false;
+      nextBtnText = options.nextBtnText || "<i class=\"fas fa-chevron-right\"></i>";
+      prevBtnText = options.nextBtnText || "<i class=\"fas fa-chevron-left\"></i>";
 
     right = pages - right
     pagingList.clear()
+
+    if(pages <= 1)
+      return;
+
+    if (prev && pages > 1 && currentPage > 1) {
+      item = pagingList.add({
+          page: options.prevBtnText || prevBtnText,
+          dotted: false
+      })[0];
+      classes(item.elm.firstChild).add('prevBtn');
+      item.elm.firstChild.setAttribute('data-i', currentPage - 1);
+      item.elm.firstChild.setAttribute('data-page', page);
+    }
+
     for (var i = 1; i <= pages; i++) {
       var className = currentPage === i ? 'active' : ''
 
@@ -49,6 +67,18 @@ module.exports = function (list) {
         classes(item.elm).add('disabled')
       }
     }
+
+    if (next && pages > 1 && currentPage < pages) {
+      item = pagingList.add({
+          page: options.nextBtnText || nextBtnText,
+          dotted: false
+      })[0];
+      classes(item.elm.firstChild).add('nextBtn');
+      item.elm.firstChild.setAttribute('data-i', currentPage + 1);
+      item.elm.firstChild.setAttribute('data-page', page);
+    }
+
+    list.trigger('paginationChange')
   }
 
   var is = {
@@ -91,7 +121,9 @@ module.exports = function (list) {
       sortClass: 'pagination-sort-that-is-not-supposed-to-exist',
     })
 
-    events.bind(pagingList.listContainer, 'click', function (e) {
+    var pagingContainer = $(pagingList.listContainer).find("."+pagingList.listClass);
+    events.bind(pagingContainer, 'click', function (e) {
+      e.preventDefault();
       var target = e.target || e.srcElement,
         page = list.utils.getAttribute(target, 'data-page'),
         i = list.utils.getAttribute(target, 'data-i')
